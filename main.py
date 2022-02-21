@@ -36,14 +36,23 @@ def count_lambdas(client):
     billableLambdas = ceil(totalLambdas / lambdaFactor)
     return billableLambdas
 
+def get_regions(client):
+    response = client.describe_regions()
+    return response
+
+
 client = boto3.client('ec2')
-billableEC2 = count_instances(client)
-print(billableEC2)
+regions = get_region(client)
+print(regions)
 
-client = boto3.client('rds')
-billableRDS = count_rds(client)
-print(billableRDS)
+#client = boto3.client('ec2')
+#billableEC2 = count_instances(client)
+#print(billableEC2)
 
-client = boto3.client('lambda')
-billableLamb = count_lambdas(client)
-print(billableLamb)
+#client = boto3.client('rds')
+#billableRDS = count_rds(client)
+#print(billableRDS)
+
+#client = boto3.client('lambda')
+#billableLamb = count_lambdas(client)
+#print(billableLamb)
