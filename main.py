@@ -37,12 +37,14 @@ def count_lambdas(client):
     return billableLambdas
 
 def get_regions(client):
+
     response = client.describe_regions()
-    return response
+    regions = list(map(lambda r: r['RegionName'], response['Regions']))
+    return regions
 
 
-client = boto3.client('ec2')
-regions = get_region(client)
+client = boto3.client('ec2', region_name='eu-west-1')
+regions = get_regions(client)
 print(regions)
 
 #client = boto3.client('ec2')
