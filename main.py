@@ -42,6 +42,13 @@ def get_regions(client):
     regions = list(map(lambda r: r['RegionName'], response['Regions']))
     return regions
 
+def get_eks_clusters(client):
+    response = client.list_clusters()
+    return response['clusters']
+
+def get_eks_nodegroups(client):
+    # --cluster-name
+    return None
 
 client = boto3.client('ec2', region_name='eu-west-1')
 regions = get_regions(client)
