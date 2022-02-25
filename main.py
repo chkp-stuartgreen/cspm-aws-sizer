@@ -46,13 +46,17 @@ def count_rds(region):  # Gather EC2 instances
 
 
 def count_lambdas(region):
-    # Lambdas are counted at 60:1
     client = boto3.client('lambda', region_name=region)
-    lambdaFactor = 60
-    response = client.get_account_settings()
-    totalLambdas = response['AccountUsage']['FunctionCount']
-    billableLambdas = ceil(totalLambdas / lambdaFactor)
-    return billableLambdas
+    response = client.list_functions()
+
+
+    totalLambdas = 0
+    for l in response['Functions']:
+        funcTags = client.list_tags(Resource=l['FunctionArn'])
+        if not ('Owner' in funcTags['Tags'] and funcTags['Tags']['Owner'] == 'Cloudguard Serverless Security'):
+            totalLambdas += 1
+    
+    return totalLambdas
 
 
 def get_regions(region):
@@ -68,6 +72,7 @@ def all_regions_check():
     billableLamb = 0
     billableRDS = 0
     billableNode = 0
+    lambdaFactor = 60
 
     for reg in regions:
         print(f"[INFO] Checking region {reg}")
@@ -77,16 +82,17 @@ def all_regions_check():
         billableLamb += count_lambdas(reg)
         billableRDS += count_rds(reg)
 
-    return {"totalEC2": billableEC2, "totalLambda": billableLamb, "totalK8sNodes": billableNode, "totalRDS": billableRDS}
+    
+    return {"totalEC2": billableEC2, "totalLambda": ceil(billableLamb / lambdaFactor), "totalK8sNodes": billableNode, "totalRDS": billableRDS}
 
 
 def print_results(results):
     print(f"[INFO] *** Asset count complete ***")
     print(
         f"[INFO] Total EC2 instances (exluding Micro and Nano) : {results['totalEC2']}")
-    print(f"[INFO] Total RDS Instances / databases : {results['totalRDS']}")
-    print(f"[INFO] Total Lambda functions (60:1): {results['totalLambda']}")
-    print(f"[INFO] Total EKS nodes: {results['totalK8sNodes']}")
+    print(f"[INFO] Total billable RDS Instances / databases : {results['totalRDS']}")
+    print(f"[INFO] Total billable Lambda functions (60:1): {results['totalLambda']}")
+    print(f"[INFO] Total billable EKS nodes: {results['totalK8sNodes']}")
 
 
 allRegionsCount = all_regions_check()
